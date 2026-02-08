@@ -1,0 +1,1969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roza Gift Corner & Electric</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="Roza Gift Corner">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-TileColor" content="#3b82f6">
+    <meta name="theme-color" content="#3b82f6">
+    
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --card-bg: white;
+            --card-border: #e2e8f0;
+            --footer-bg: #1e293b;
+            --footer-text: #cbd5e1;
+            --footer-link: #94a3b8;
+            --footer-link-hover: #3b82f6;
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --secondary-bg: #f8fafc;
+            --spinner-border: rgba(59, 130, 246, 0.1);
+            --spinner-top: #3b82f6;
+            --secondary-color: #10b981;
+            --secondary-hover: #059669;
+            --highlight-color: #ef4444;
+            --highlight-bg: #fef2f2;
+            --modal-bg: rgba(0, 0, 0, 0.5);
+            --modal-content-bg: white;
+            --input-bg: #f8fafc;
+            --input-border: #e2e8f0;
+            --input-focus: #3b82f6;
+            --error-color: #ef4444;
+            --error-bg: #fef2f2;
+            --success-color: #10b981;
+            --success-bg: #f0fdf4;
+            --return-color: #f59e0b;
+            --return-bg: #fef3c7;
+            --store-color: #8b5cf6;
+            --store-bg: #f5f3ff;
+            --store-hover: #7c3aed;
+            --install-btn-bg: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        }
+        
+        [data-theme="dark"] {
+            --bg-color: #0f172a;
+            --text-color: #e2e8f0;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --footer-bg: #0f172a;
+            --footer-text: #cbd5e1;
+            --footer-link: #94a3b8;
+            --footer-link-hover: #60a5fa;
+            --primary-color: #3b82f6;
+            --primary-hover: #60a5fa;
+            --secondary-bg: #334155;
+            --spinner-border: rgba(59, 130, 246, 0.2);
+            --spinner-top: #60a5fa;
+            --secondary-color: #10b981;
+            --secondary-hover: #34d399;
+            --highlight-color: #f87171;
+            --highlight-bg: #7f1d1d;
+            --modal-bg: rgba(0, 0, 0, 0.7);
+            --modal-content-bg: #1e293b;
+            --input-bg: #334155;
+            --input-border: #475569;
+            --input-focus: #60a5fa;
+            --error-color: #f87171;
+            --error-bg: #7f1d1d;
+            --success-color: #34d399;
+            --success-bg: #064e3b;
+            --return-color: #fbbf24;
+            --return-bg: #78350f;
+            --store-color: #a78bfa;
+            --store-bg: #2e1065;
+            --store-hover: #9333ea;
+            --install-btn-bg: linear-gradient(135deg, #60a5fa, #a78bfa);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        
+        /* Updated header with contact numbers */
+        header {
+            text-align: center;
+            padding: 20px 0 15px;
+            border-bottom: 2px solid var(--card-border);
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .brand-title {
+            color: var(--primary-color);
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
+        }
+        
+        .brand-subtitle {
+            color: var(--text-color);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .contact-line {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 10px 0;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--footer-link);
+            font-size: 15px;
+            font-weight: 500;
+        }
+        
+        /* No phone emoji - just numbers */
+        .contact-number {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .address-line {
+            color: var(--footer-link);
+            font-size: 15px;
+            line-height: 1.4;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 8px 0;
+            border-top: 1px solid var(--card-border);
+            border-bottom: 1px solid var(--card-border);
+            margin-top: 8px;
+        }
+        
+        /* Return button in header */
+        .return-btn {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--return-bg);
+            color: var(--return-color);
+            border: 2px solid var(--return-color);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        
+        .return-btn:hover {
+            background: var(--return-color);
+            color: white;
+            transform: translateY(-50%) scale(1.05);
+        }
+        
+        /* Main content card */
+        .main-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 35px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            margin: 20px auto;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            border: 1px solid var(--card-border);
+        }
+        
+        .detection-header {
+            margin-bottom: 25px;
+        }
+        
+        .detection-title {
+            color: var(--primary-color);
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .detection-subtitle {
+            color: var(--footer-link);
+            font-size: 15px;
+        }
+        
+        /* Simple device info */
+        .device-info {
+            background: var(--secondary-bg);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 25px 0;
+            border: 1px solid var(--card-border);
+        }
+        
+        .device-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .device-text {
+            font-size: 16px;
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+        
+        .device-detail {
+            color: var(--footer-link);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        
+        /* System Button Container */
+        .system-button-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 25px 0 10px;
+        }
+        
+        /* Online Store Button Container (Separate) */
+        .store-button-container {
+            margin: 30px auto;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        /* Main action button */
+        .action-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 18px 45px;
+            font-size: 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 500;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none !important;
+        }
+        
+        .action-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px -1px rgba(59, 130, 246, 0.3);
+        }
+        
+        .action-btn:active {
+            transform: translateY(0);
+        }
+        
+        .secondary-btn {
+            background: var(--secondary-color);
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+        }
+        
+        .secondary-btn:hover {
+            background: var(--secondary-hover);
+            box-shadow: 0 6px 8px -1px rgba(16, 185, 129, 0.3);
+        }
+        
+        /* Online Store Button (Separate from systems) */
+        .store-btn {
+            background: var(--store-bg);
+            color: var(--store-color);
+            border: 2px solid var(--store-color);
+            padding: 20px 45px;
+            font-size: 20px;
+            border-radius: 16px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none !important;
+        }
+        
+        .store-btn:hover {
+            background: var(--store-color);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px -5px rgba(139, 92, 246, 0.4);
+        }
+        
+        .store-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .coming-soon-tag {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: var(--highlight-color);
+            color: white;
+            padding: 4px 12px;
+            font-size: 12px;
+            border-radius: 15px;
+            font-weight: 700;
+            transform: rotate(15deg);
+            animation: pulse 2s infinite;
+            z-index: 2;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { 
+                transform: rotate(15deg) scale(1); 
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+            50% { 
+                transform: rotate(15deg) scale(1.1); 
+                box-shadow: 0 0 0 5px rgba(239, 68, 68, 0);
+            }
+        }
+        
+        .store-icon {
+            font-size: 28px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        /* Section title */
+        .section-title {
+            text-align: center;
+            margin: 30px 0 20px;
+            color: var(--text-color);
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        /* Password Modal */
+        .password-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-bg);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background: var(--modal-content-bg);
+            border-radius: 16px;
+            padding: 35px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--card-border);
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .modal-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .modal-subtitle {
+            color: var(--footer-link);
+            font-size: 14px;
+        }
+        
+        .password-input-group {
+            margin-bottom: 20px;
+        }
+        
+        .password-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-color);
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 14px;
+            background: var(--input-bg);
+            border: 2px solid var(--input-border);
+            border-radius: 10px;
+            font-size: 18px;
+            text-align: center;
+            letter-spacing: 4px;
+            color: var(--text-color);
+            transition: all 0.3s;
+        }
+        
+        .password-input:focus {
+            outline: none;
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+        
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+        
+        .submit-btn {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .submit-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+        
+        .cancel-btn {
+            background: var(--secondary-bg);
+            color: var(--text-color);
+            border: 2px solid var(--card-border);
+        }
+        
+        .cancel-btn:hover {
+            background: var(--card-border);
+            transform: translateY(-2px);
+        }
+        
+        .error-message {
+            background: var(--error-bg);
+            color: var(--error-color);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            animation: shake 0.5s ease;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        .success-message {
+            background: var(--success-bg);
+            color: var(--success-color);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Footer - separate from main content */
+        footer {
+            margin-top: auto;
+            background: var(--footer-bg);
+            color: var(--footer-text);
+            padding: 30px 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .footer-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+        
+        .footer-link {
+            color: var(--footer-link);
+            text-decoration: none;
+            font-size: 15px;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .footer-link:hover {
+            color: var(--footer-link-hover);
+        }
+        
+        /* Terms & Conditions Link - Blinking Highlight */
+        .terms-link {
+            color: var(--highlight-color) !important;
+            font-weight: 700 !important;
+            background: var(--highlight-bg);
+            padding: 8px 16px !important;
+            border-radius: 8px;
+            border: 2px solid var(--highlight-color);
+            position: relative;
+            overflow: hidden;
+            animation: blinkGlow 2s infinite;
+        }
+        
+        @keyframes blinkGlow {
+            0%, 100% {
+                box-shadow: 0 0 5px var(--highlight-color),
+                            inset 0 0 5px rgba(239, 68, 68, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 15px var(--highlight-color),
+                            0 0 20px rgba(239, 68, 68, 0.4),
+                            inset 0 0 10px rgba(239, 68, 68, 0.3);
+                transform: scale(1.05);
+            }
+        }
+        
+        .terms-link:hover {
+            animation: none;
+            background: var(--highlight-color);
+            color: white !important;
+            box-shadow: 0 0 20px var(--highlight-color);
+            transform: scale(1.1);
+        }
+        
+        /* Simple password help text - minimal */
+        .password-help {
+            margin: 20px 0 15px;
+            color: var(--footer-text);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        /* WhatsApp link with underline on hover only */
+        .whatsapp-link {
+            color: inherit;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .whatsapp-link:hover {
+            text-decoration: underline;
+            color: #25D366; /* WhatsApp green */
+        }
+        
+        /* Theme toggle - discreet in corner */
+        .theme-toggle-corner {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            z-index: 10;
+        }
+        
+        .theme-toggle-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--footer-link);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            opacity: 0.6;
+        }
+        
+        .theme-toggle-btn:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.1);
+            border-color: var(--footer-link-hover);
+        }
+        
+        .theme-toggle-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .copyright {
+            font-size: 14px;
+            color: var(--footer-link);
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--card-border);
+        }
+        
+        .developer {
+            margin-top: 15px;
+            font-size: 14px;
+            color: var(--footer-link);
+        }
+        
+        .developer a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+        
+        .developer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Loading animation */
+        .spinner {
+            width: 22px;
+            height: 22px;
+            border: 3px solid var(--spinner-border);
+            border-top: 3px solid var(--spinner-top);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Detection completed */
+        .detected {
+            color: #10b981;
+        }
+        
+        .note-text {
+            color: var(--footer-link);
+            font-size: 14px;
+            margin-top: 15px;
+            font-style: italic;
+        }
+        
+        /* Back to Home notification */
+        .back-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--return-bg);
+            color: var(--return-color);
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 2px solid var(--return-color);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            z-index: 999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            animation: slideInRight 0.3s ease;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .back-btn {
+            background: var(--return-color);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .back-btn:hover {
+            background: var(--return-hover);
+            transform: scale(1.05);
+        }
+        
+        /* Coming Soon Modal */
+        .coming-soon-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-bg);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .coming-soon-content {
+            background: var(--modal-content-bg);
+            border-radius: 16px;
+            padding: 40px 35px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--card-border);
+            animation: slideUp 0.3s ease;
+            text-align: center;
+        }
+        
+        .coming-soon-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            color: var(--store-color);
+        }
+        
+        .coming-soon-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--store-color);
+            margin-bottom: 15px;
+        }
+        
+        .coming-soon-text {
+            color: var(--text-color);
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: var(--secondary-bg);
+            border-radius: 4px;
+            margin: 25px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            width: 45%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--store-color), var(--store-hover));
+            border-radius: 4px;
+            animation: progressAnimation 3s ease-in-out infinite;
+        }
+        
+        @keyframes progressAnimation {
+            0%, 100% { width: 45%; }
+            50% { width: 55%; }
+        }
+        
+        .estimated-time {
+            color: var(--footer-link);
+            font-size: 14px;
+            margin-top: 15px;
+            font-style: italic;
+        }
+        
+        .modal-close-btn {
+            background: var(--store-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        .modal-close-btn:hover {
+            background: var(--store-hover);
+            transform: translateY(-2px);
+        }
+        
+        /* Install App Button */
+        .install-app-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--install-btn-bg);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 15px;
+            z-index: 9999;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: fadeInUp 0.5s ease;
+            transition: all 0.3s;
+            display: none; /* Hidden by default */
+        }
+        
+        .install-app-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.5);
+        }
+        
+        .install-app-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Install Instructions */
+        .install-instructions {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            padding: 18px;
+            border-radius: 12px;
+            border: 2px solid var(--primary-color);
+            z-index: 9998;
+            max-width: 320px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideInRight 0.5s ease;
+            display: none;
+        }
+        
+        .install-instructions h4 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .install-instructions ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .install-instructions li {
+            margin-bottom: 6px;
+        }
+        
+        .close-instructions {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .close-instructions:hover {
+            background: var(--primary-hover);
+        }
+        
+        /* Remove link preview/tooltip styles */
+        a, button {
+            text-decoration: none !important;
+            outline: none !important;
+        }
+        
+        a:hover, button:hover {
+            text-decoration: none !important;
+        }
+        
+        /* Disable title tooltip for all buttons */
+        button[title], a[title] {
+            position: relative;
+        }
+        
+        button[title]:hover::after, 
+        a[title]:hover::after {
+            display: none !important;
+        }
+        
+        /* PWA App Icon Canvas */
+        .icon-canvas {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hidden Canvas for generating app icons -->
+    <canvas id="iconCanvas" class="icon-canvas" width="512" height="512"></canvas>
+    
+    <!-- Install App Button (Will appear for PWA install) -->
+    <button class="install-app-btn" id="installAppBtn">
+        <span>📱</span>
+        <span>Install App</span>
+    </button>
+    
+    <!-- Install Instructions Panel -->
+    <div class="install-instructions" id="installInstructions">
+        <h4><span>📲</span> Install as App</h4>
+        <ol>
+            <li>Tap Chrome menu (3 dots)</li>
+            <li>Select "Install app" or</li>
+            <li>"Add to Home screen"</li>
+        </ol>
+        <p style="font-size: 13px; color: var(--footer-link); margin-bottom: 12px;">
+            Get app icon on home screen
+        </p>
+        <button class="close-instructions" id="closeInstructions">Got it!</button>
+    </div>
+    
+    <div class="container">
+        <header>
+            <!-- Return button in header -->
+            <button class="return-btn" id="returnBtn" style="display: none;">
+                <span>←</span> <span>Back to Main</span>
+            </button>
+            
+            <!-- Updated header with contact numbers -->
+            <h1 class="brand-title">Roza Gift Corner & Electric</h1>
+            <div class="brand-subtitle">Electronics • Cosmetics • Gifts & More</div>
+            
+            <!-- Contact Numbers - No phone emojis -->
+            <div class="contact-line">
+                <div class="contact-item">
+                    <span class="contact-number">01319362189</span>
+                    <span>|</span>
+                    <span class="contact-number">01715986646</span>
+                </div>
+            </div>
+            
+            <div class="address-line">
+                Mosjid Market, Naohata Mor, Mohadevpur, Naogaon
+            </div>
+        </header>
+        
+        <main>
+            <!-- Online Store Button (Separate, always visible) -->
+            <div class="store-button-container">
+                <button class="store-btn" id="onlineStoreBtn">
+                    <span class="store-icon">🛒</span>
+                    <span>Visit Our Online Store</span>
+                    <div class="coming-soon-tag">Coming Soon</div>
+                </button>
+            </div>
+            
+            <!-- Systems Section -->
+            <h2 class="section-title">Management Systems</h2>
+            
+            <div class="main-card">
+                <div class="detection-header">
+                    <div class="detection-title">
+                        <div class="spinner"></div>
+                        <span id="statusText">Checking System Compatibility</span>
+                    </div>
+                    <div class="detection-subtitle">Preparing optimal experience...</div>
+                </div>
+                
+                <!-- Simple device info -->
+                <div class="device-info" id="deviceInfo" style="display: none;">
+                    <div class="device-icon" id="deviceIcon">✅</div>
+                    <div class="device-text">
+                        <span id="deviceType">System is Ready</span>
+                    </div>
+                    <div class="device-detail" id="deviceDetail">
+                        Optimized for your device
+                    </div>
+                </div>
+                
+                <!-- System Button Container -->
+                <div class="system-button-container" id="systemButtonContainer" style="display: none;">
+                    <!-- Data Management System Button -->
+                    <button class="action-btn" id="dataManagementBtn">
+                        <span>🚀</span> <span>Data Management System</span>
+                    </button>
+                    
+                    <!-- Invoice System Button -->
+                    <button class="action-btn secondary-btn" id="invoiceButton">
+                        <span>🧾</span> <span>Go to Invoice System</span>
+                    </button>
+                </div>
+                
+                <div class="note-text" id="noteText" style="display: none;">
+                    Choose a management system to continue
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Password Modal -->
+    <div class="password-modal" id="passwordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span>🔒</span>
+                    <span id="modalTitle">Enter Password</span>
+                </div>
+                <div class="modal-subtitle" id="modalSubtitle">
+                    Please enter the password to continue
+                </div>
+            </div>
+            
+            <div class="password-input-group">
+                <label for="passwordInput" class="password-label">Password</label>
+                <input type="password" 
+                       id="passwordInput" 
+                       class="password-input" 
+                       placeholder="Enter 4-digit code"
+                       maxlength="4"
+                       inputmode="numeric">
+            </div>
+            
+            <div class="error-message" id="errorMessage">
+                <span>❌</span>
+                <span>Incorrect password. Please try again.</span>
+            </div>
+            
+            <div class="success-message" id="successMessage">
+                <span>✅</span>
+                <span>Password verified! Redirecting...</span>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="modal-btn cancel-btn" id="cancelBtn">Cancel</button>
+                <button class="modal-btn submit-btn" id="submitBtn">Submit</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Coming Soon Modal -->
+    <div class="coming-soon-modal" id="comingSoonModal">
+        <div class="coming-soon-content">
+            <div class="coming-soon-icon">🛒</div>
+            <h2 class="coming-soon-title">Online Store</h2>
+            <p class="coming-soon-text">
+                We're excited to announce that our <strong>Online Store</strong> is currently under development!
+                Soon you'll be able to browse our products, place orders, and get delivery right at your doorstep.
+            </p>
+            <div class="progress-container">
+                <div class="progress-bar"></div>
+            </div>
+            <p class="coming-soon-text">
+                <strong>Features coming soon:</strong><br>
+                • Browse Electronics, Cosmetics & Gifts<br>
+                • Secure Online Payments<br>
+                • Home Delivery Service<br>
+                • Order Tracking System<br>
+                • Customer Reviews & Ratings
+            </p>
+            <p class="estimated-time">Estimated Launch: Coming Soon</p>
+            <button class="modal-close-btn" id="closeComingSoonBtn">Close Preview</button>
+        </div>
+    </div>
+    
+    <!-- Back to Home Notification -->
+    <div class="back-notification" id="backNotification">
+        <span>Want to return to main system?</span>
+        <button class="back-btn" id="backToHomeBtn">Return to Main</button>
+    </div>
+    
+    <!-- Footer - separate section -->
+    <footer>
+        <div class="footer-content">
+            <!-- Simple Password Help Instructions -->
+            <div class="password-help">
+                For password access to management systems, contact us on 
+                <a href="https://wa.me/8801319362189" class="whatsapp-link" target="_blank">WhatsApp</a>.
+            </div>
+            
+            <div class="footer-links">
+                <a href="#" class="footer-link" id="desktopSystemLink">
+                    🖥️ Desktop System
+                </a>
+                <a href="#" class="footer-link" id="mobileSystemLink">
+                    📱 Mobile System
+                </a>
+                <a href="#" class="footer-link" id="dataBackupLink">
+                    💾 Data Backup
+                </a>
+                <a href="#" class="footer-link terms-link" id="footerTermsLink">
+                    📄 Terms & Conditions
+                </a>
+            </div>
+            
+            <div class="copyright">
+                Roza Gift Corner & Electric © <span id="year"></span> | All Rights Reserved
+            </div>
+            
+            <div class="developer">
+                Developed & Designed by 
+                <a href="https://www.facebook.com/farhantanzidshiyam" target="_blank">
+                    Farhan Tanzid Shiyam
+                </a>
+            </div>
+            
+            <!-- Theme Toggle - discreet in corner -->
+            <div class="theme-toggle-corner">
+                <button class="theme-toggle-btn" id="themeToggleBtn">
+                    <span id="themeIcon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // System URLs
+        const SYSTEM_URLS = {
+            main: "https://farhantanzidshiyam-dev.github.io/rozagiftcorner-hub/",
+            desktop: "https://farhantanzidshiyam-dev.github.io/rozagiftcorner/",
+            mobile: "https://farhantanzidshiyam-dev.github.io/rozagiftcorner-backup/",
+            invoice: "https://farhantanzidshiyam-dev.github.io/rozagiftcorner-invoice/",
+            terms: "https://farhantanzidshiyam-dev.github.io/rozagiftcorner-terms-conditions/",
+            dataBackup: "https://drive.google.com/drive/folders/1yYuczLULObc0TrnQ3XlInfD8MH08POfs"
+        };
+        
+        // Password configuration
+        const PASSWORDS = {
+            dataManagement: "3508",  // For Data Management System
+            desktopSystem: "3508",   // For Desktop System
+            mobileSystem: "3508",    // For Mobile System
+            dataBackup: "3508",      // For Data Backup
+            invoice: "3058"          // For Invoice System
+        };
+        
+        // Current action tracking
+        let currentAction = null;
+        let isFromExternalSystem = false;
+        let deferredPrompt = null;
+        
+        // ======================= PWA ICON GENERATOR =======================
+        function generateAppIcons() {
+            const canvas = document.getElementById('iconCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Create different sizes
+            const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+            const icons = {};
+            
+            sizes.forEach(size => {
+                // Create temporary canvas for each size
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = size;
+                tempCanvas.height = size;
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                // Draw background
+                const gradient = tempCtx.createLinearGradient(0, 0, size, size);
+                gradient.addColorStop(0, '#3b82f6');
+                gradient.addColorStop(1, '#8b5cf6');
+                tempCtx.fillStyle = gradient;
+                tempCtx.fillRect(0, 0, size, size);
+                
+                // Draw RGCE letters
+                tempCtx.fillStyle = 'white';
+                tempCtx.textAlign = 'center';
+                tempCtx.textBaseline = 'middle';
+                
+                if (size >= 192) {
+                    // For larger icons, draw "RGCE" clearly
+                    tempCtx.font = `bold ${size * 0.35}px Arial`;
+                    tempCtx.fillText('RGCE', size/2, size/2);
+                    
+                    // Add small decorative element
+                    tempCtx.beginPath();
+                    tempCtx.arc(size * 0.8, size * 0.2, size * 0.08, 0, Math.PI * 2);
+                    tempCtx.fillStyle = '#fbbf24';
+                    tempCtx.fill();
+                } else if (size >= 96) {
+                    // For medium icons
+                    tempCtx.font = `bold ${size * 0.4}px Arial`;
+                    tempCtx.fillText('RGCE', size/2, size/2);
+                } else {
+                    // For small icons, just "R"
+                    tempCtx.font = `bold ${size * 0.5}px Arial`;
+                    tempCtx.fillText('R', size/2, size/2);
+                }
+                
+                // Convert to data URL
+                icons[size] = tempCanvas.toDataURL('image/png');
+            });
+            
+            return icons;
+        }
+        
+        // ======================= PWA SETUP =======================
+        function setupPWA() {
+            // Check if app is already installed
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                                window.navigator.standalone;
+            
+            if (isStandalone) {
+                console.log('App is running in standalone mode');
+                return;
+            }
+            
+            // Generate icons
+            const icons = generateAppIcons();
+            
+            // Create dynamic manifest
+            const manifest = {
+                "name": "Roza Gift Corner",
+                "short_name": "Roza Gift",
+                "description": "Management Systems for Roza Gift Corner & Electric",
+                "start_url": window.location.href,
+                "display": "standalone",
+                "background_color": "#3b82f6",
+                "theme_color": "#3b82f6",
+                "orientation": "portrait",
+                "icons": Object.keys(icons).map(size => ({
+                    "src": icons[size],
+                    "sizes": `${size}x${size}`,
+                    "type": "image/png",
+                    "purpose": "any maskable"
+                }))
+            };
+            
+            // Create manifest link
+            const manifestLink = document.createElement('link');
+            manifestLink.rel = 'manifest';
+            manifestLink.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
+            document.head.appendChild(manifestLink);
+            
+            // Create icon links for different sizes
+            Object.keys(icons).forEach(size => {
+                const iconLink = document.createElement('link');
+                iconLink.rel = 'icon';
+                iconLink.sizes = `${size}x${size}`;
+                iconLink.href = icons[size];
+                document.head.appendChild(iconLink);
+                
+                // Also create apple-touch-icon for iOS
+                if (size >= 152) {
+                    const appleIcon = document.createElement('link');
+                    appleIcon.rel = 'apple-touch-icon';
+                    appleIcon.sizes = `${size}x${size}`;
+                    appleIcon.href = icons[size];
+                    document.head.appendChild(appleIcon);
+                }
+            });
+            
+            // Listen for beforeinstallprompt event
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // Show install button after 3 seconds
+                setTimeout(() => {
+                    const installBtn = document.getElementById('installAppBtn');
+                    if (installBtn && deferredPrompt) {
+                        installBtn.style.display = 'flex';
+                        
+                        // Auto hide install button after 30 seconds
+                        setTimeout(() => {
+                            if (installBtn.style.display !== 'none') {
+                                installBtn.style.opacity = '0';
+                                setTimeout(() => {
+                                    installBtn.style.display = 'none';
+                                }, 500);
+                            }
+                        }, 30000);
+                    }
+                }, 3000);
+                
+                // Also show instructions for Android
+                if (/Android/i.test(navigator.userAgent)) {
+                    setTimeout(() => {
+                        const instructions = document.getElementById('installInstructions');
+                        if (instructions) {
+                            instructions.style.display = 'block';
+                        }
+                    }, 5000);
+                }
+            });
+            
+            // Listen for app installed event
+            window.addEventListener('appinstalled', () => {
+                console.log('App was installed');
+                const installBtn = document.getElementById('installAppBtn');
+                if (installBtn) {
+                    installBtn.style.display = 'none';
+                }
+                const instructions = document.getElementById('installInstructions');
+                if (instructions) {
+                    instructions.style.display = 'none';
+                }
+                deferredPrompt = null;
+                
+                // Show success message
+                showToast('App installed successfully!', 'success');
+            });
+        }
+        
+        // ======================= PWA INSTALL HANDLER =======================
+        function handleInstallClick() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                        const installBtn = document.getElementById('installAppBtn');
+                        if (installBtn) {
+                            installBtn.style.display = 'none';
+                        }
+                        const instructions = document.getElementById('installInstructions');
+                        if (instructions) {
+                            instructions.style.display = 'none';
+                        }
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                // Show instructions if prompt not available
+                const instructions = document.getElementById('installInstructions');
+                if (instructions) {
+                    instructions.style.display = 'block';
+                }
+            }
+        }
+        
+        // ======================= TOAST NOTIFICATION =======================
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${type === 'success' ? '#10b981' : '#3b82f6'};
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                z-index: 10000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                animation: fadeInDown 0.3s ease;
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(-20px)';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // Theme management
+        const ThemeManager = {
+            currentTheme: 'light',
+            
+            init: function() {
+                // Load saved theme from localStorage
+                const savedTheme = localStorage.getItem('rozaTheme');
+                if (savedTheme) {
+                    this.setTheme(savedTheme);
+                } else {
+                    // Default to light theme
+                    this.setTheme('light');
+                }
+                
+                // Set up theme toggle button
+                document.getElementById('themeToggleBtn').addEventListener('click', () => {
+                    this.toggleTheme();
+                });
+            },
+            
+            setTheme: function(theme) {
+                this.currentTheme = theme;
+                document.body.setAttribute('data-theme', theme);
+                localStorage.setItem('rozaTheme', theme);
+                
+                // Update theme icon
+                const themeIcon = document.getElementById('themeIcon');
+                if (theme === 'light') {
+                    themeIcon.textContent = '🌙';
+                } else {
+                    themeIcon.textContent = '☀️';
+                }
+            },
+            
+            toggleTheme: function() {
+                const newTheme = this.currentTheme === 'light' ? 'dark' : 'light';
+                this.setTheme(newTheme);
+            }
+        };
+        
+        // Password Modal Management
+        const PasswordModal = {
+            modal: null,
+            passwordInput: null,
+            errorMessage: null,
+            successMessage: null,
+            submitBtn: null,
+            cancelBtn: null,
+            modalTitle: null,
+            modalSubtitle: null,
+            isRedirecting: false,
+            
+            init: function() {
+                this.modal = document.getElementById('passwordModal');
+                this.passwordInput = document.getElementById('passwordInput');
+                this.errorMessage = document.getElementById('errorMessage');
+                this.successMessage = document.getElementById('successMessage');
+                this.submitBtn = document.getElementById('submitBtn');
+                this.cancelBtn = document.getElementById('cancelBtn');
+                this.modalTitle = document.getElementById('modalTitle');
+                this.modalSubtitle = document.getElementById('modalSubtitle');
+                
+                // Event listeners
+                this.submitBtn.addEventListener('click', () => this.verifyPassword());
+                this.cancelBtn.addEventListener('click', () => this.closeModal());
+                
+                // Allow Enter key to submit
+                this.passwordInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.verifyPassword();
+                    }
+                });
+                
+                // Allow Escape key to close
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.modal.style.display === 'flex') {
+                        this.closeModal();
+                    }
+                });
+                
+                // Reset modal state when it's closed
+                this.modal.addEventListener('click', (e) => {
+                    if (e.target === this.modal) {
+                        this.closeModal();
+                    }
+                });
+            },
+            
+            // Reset all modal elements to default state
+            resetModalState: function() {
+                this.passwordInput.value = '';
+                this.passwordInput.disabled = false;
+                this.errorMessage.style.display = 'none';
+                this.successMessage.style.display = 'none';
+                this.submitBtn.disabled = false;
+                this.cancelBtn.disabled = false;
+                currentAction = null;
+                this.isRedirecting = false;
+            },
+            
+            openModal: function(action, title = "Enter Password", subtitle = "Please enter the password to continue") {
+                // Reset state first
+                this.resetModalState();
+                
+                currentAction = action;
+                this.modalTitle.textContent = title;
+                this.modalSubtitle.textContent = subtitle;
+                this.modal.style.display = 'flex';
+                
+                // Focus on input after a short delay
+                setTimeout(() => {
+                    this.passwordInput.focus();
+                }, 100);
+            },
+            
+            closeModal: function() {
+                this.modal.style.display = 'none';
+                this.resetModalState();
+            },
+            
+            verifyPassword: function() {
+                const enteredPassword = this.passwordInput.value;
+                
+                if (this.isRedirecting) return; // Prevent multiple redirects
+                
+                // Get the correct password for the current action
+                const correctPassword = PASSWORDS[currentAction];
+                
+                if (enteredPassword === correctPassword) {
+                    // Show success message
+                    this.errorMessage.style.display = 'none';
+                    this.successMessage.style.display = 'flex';
+                    
+                    // Disable input and buttons temporarily
+                    this.passwordInput.disabled = true;
+                    this.submitBtn.disabled = true;
+                    this.cancelBtn.disabled = true;
+                    
+                    // Set redirecting flag
+                    this.isRedirecting = true;
+                    
+                    // Store current action in sessionStorage for return navigation
+                    sessionStorage.setItem('lastSystemAction', currentAction);
+                    
+                    // Redirect after a short delay
+                    setTimeout(() => {
+                        this.navigateToSystem();
+                    }, 800);
+                } else {
+                    // Show error message
+                    this.errorMessage.style.display = 'flex';
+                    this.successMessage.style.display = 'none';
+                    
+                    // Clear input and focus
+                    this.passwordInput.value = '';
+                    this.passwordInput.focus();
+                    
+                    // Shake animation for error
+                    this.errorMessage.style.animation = 'none';
+                    setTimeout(() => {
+                        this.errorMessage.style.animation = 'shake 0.5s ease';
+                    }, 10);
+                }
+            },
+            
+            navigateToSystem: function() {
+                let url;
+                let isExternal = false;
+                
+                switch(currentAction) {
+                    case 'dataManagement':
+                        const device = detectDevice();
+                        url = device.isMobile ? SYSTEM_URLS.mobile : SYSTEM_URLS.desktop;
+                        break;
+                        
+                    case 'desktopSystem':
+                        url = SYSTEM_URLS.desktop;
+                        break;
+                        
+                    case 'mobileSystem':
+                        url = SYSTEM_URLS.mobile;
+                        break;
+                        
+                    case 'dataBackup':
+                        url = SYSTEM_URLS.dataBackup;
+                        isExternal = true;
+                        break;
+                        
+                    case 'invoice':
+                        url = SYSTEM_URLS.invoice;
+                        break;
+                        
+                    case 'terms':
+                        url = SYSTEM_URLS.terms;
+                        break;
+                }
+                
+                if (isExternal) {
+                    // For external links, open in new tab
+                    window.open(url, '_blank');
+                    this.closeModal();
+                } else {
+                    // For internal systems, navigate normally
+                    // Store the main hub URL for return
+                    sessionStorage.setItem('mainHubUrl', window.location.href);
+                    window.location.href = url;
+                }
+                
+                // Reset redirecting flag
+                this.isRedirecting = false;
+            }
+        };
+        
+        // Coming Soon Modal Management
+        const ComingSoonModal = {
+            modal: null,
+            closeBtn: null,
+            
+            init: function() {
+                this.modal = document.getElementById('comingSoonModal');
+                this.closeBtn = document.getElementById('closeComingSoonBtn');
+                
+                // Event listeners
+                this.closeBtn.addEventListener('click', () => this.closeModal());
+                
+                // Close modal when clicking outside
+                this.modal.addEventListener('click', (e) => {
+                    if (e.target === this.modal) {
+                        this.closeModal();
+                    }
+                });
+                
+                // Allow Escape key to close
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.modal.style.display === 'flex') {
+                        this.closeModal();
+                    }
+                });
+                
+                // Set up online store button
+                document.getElementById('onlineStoreBtn').addEventListener('click', () => {
+                    this.openModal();
+                });
+            },
+            
+            openModal: function() {
+                this.modal.style.display = 'flex';
+            },
+            
+            closeModal: function() {
+                this.modal.style.display = 'none';
+            }
+        };
+        
+        // Navigation Manager for handling returns
+        const NavigationManager = {
+            returnBtn: null,
+            backNotification: null,
+            backToHomeBtn: null,
+            
+            init: function() {
+                this.returnBtn = document.getElementById('returnBtn');
+                this.backNotification = document.getElementById('backNotification');
+                this.backToHomeBtn = document.getElementById('backToHomeBtn');
+                
+                // Check if we're returning from a system
+                this.checkReturnFromSystem();
+                
+                // Set up event listeners
+                this.returnBtn.addEventListener('click', () => this.returnToMain());
+                this.backToHomeBtn.addEventListener('click', () => this.returnToMain());
+                
+                // Show return button when needed
+                if (sessionStorage.getItem('fromSystem') === 'true') {
+                    this.showReturnButton();
+                    this.showBackNotification();
+                    sessionStorage.removeItem('fromSystem');
+                }
+            },
+            
+            checkReturnFromSystem: function() {
+                // Check if user is returning from a system
+                const referrer = document.referrer;
+                const isFromSystem = referrer.includes('rozagiftcorner') && 
+                                    !referrer.includes('rozagiftcorner-hub');
+                
+                if (isFromSystem) {
+                    sessionStorage.setItem('fromSystem', 'true');
+                    isFromExternalSystem = true;
+                    
+                    // Show a welcome back message
+                    setTimeout(() => {
+                        this.showBackNotification();
+                    }, 500);
+                }
+            },
+            
+            showReturnButton: function() {
+                this.returnBtn.style.display = 'flex';
+            },
+            
+            showBackNotification: function() {
+                this.backNotification.style.display = 'flex';
+                
+                // Auto hide after 10 seconds
+                setTimeout(() => {
+                    this.backNotification.style.display = 'none';
+                }, 10000);
+            },
+            
+            returnToMain: function() {
+                // Navigate to the main hub URL stored in sessionStorage
+                const mainHubUrl = sessionStorage.getItem('mainHubUrl') || window.location.href;
+                window.location.href = mainHubUrl;
+            },
+            
+            prepareForSystemNavigation: function(systemType) {
+                // Store current URL as the main hub
+                sessionStorage.setItem('mainHubUrl', window.location.href);
+                sessionStorage.setItem('lastSystem', systemType);
+            }
+        };
+        
+        // Detect device information
+        function detectDevice() {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            const ua = navigator.userAgent;
+            let os = 'Unknown OS';
+            
+            if (ua.includes('Win')) {
+                os = 'Windows';
+            } else if (ua.includes('Mac')) {
+                os = 'macOS';
+            } else if (ua.includes('Linux')) {
+                os = 'Linux';
+            } else if (ua.includes('Android')) {
+                os = 'Android';
+            } else if (ua.includes('iOS')) {
+                os = 'iOS';
+            }
+            
+            const deviceType = isMobile ? 'Mobile' : 'Desktop';
+            
+            return {
+                type: deviceType,
+                os: os,
+                isMobile: isMobile
+            };
+        }
+        
+        // Update display with detected device
+        function updateDetectionDisplay(device) {
+            const statusText = document.getElementById('statusText');
+            const spinner = document.querySelector('.spinner');
+            const deviceInfo = document.getElementById('deviceInfo');
+            const deviceIcon = document.getElementById('deviceIcon');
+            const deviceType = document.getElementById('deviceType');
+            const deviceDetail = document.getElementById('deviceDetail');
+            const systemButtonContainer = document.getElementById('systemButtonContainer');
+            const dataManagementBtn = document.getElementById('dataManagementBtn');
+            const invoiceButton = document.getElementById('invoiceButton');
+            const noteText = document.getElementById('noteText');
+            const footerTermsLink = document.getElementById('footerTermsLink');
+            const desktopSystemLink = document.getElementById('desktopSystemLink');
+            const mobileSystemLink = document.getElementById('mobileSystemLink');
+            const dataBackupLink = document.getElementById('dataBackupLink');
+            
+            // Update status
+            statusText.textContent = 'System Ready';
+            statusText.classList.add('detected');
+            spinner.style.display = 'none';
+            
+            // Update device info
+            deviceIcon.textContent = '✅';
+            deviceType.textContent = 'System is Ready';
+            deviceDetail.textContent = 'Optimized for your device';
+            
+            // Show elements
+            deviceInfo.style.display = 'block';
+            systemButtonContainer.style.display = 'flex';
+            noteText.style.display = 'block';
+            
+            // Set data management button click action
+            dataManagementBtn.onclick = function() {
+                NavigationManager.prepareForSystemNavigation('dataManagement');
+                PasswordModal.openModal(
+                    'dataManagement',
+                    'Data Management System',
+                    'Enter password to access the Data Management System'
+                );
+            };
+            
+            // Set invoice button click action (now requires password)
+            invoiceButton.onclick = function() {
+                NavigationManager.prepareForSystemNavigation('invoice');
+                PasswordModal.openModal(
+                    'invoice',
+                    'Invoice System',
+                    'Enter password to access the Invoice System'
+                );
+            };
+            
+            // Set desktop system link
+            desktopSystemLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                NavigationManager.prepareForSystemNavigation('desktopSystem');
+                PasswordModal.openModal(
+                    'desktopSystem',
+                    'Desktop System',
+                    'Enter password to access the Desktop System'
+                );
+            });
+            
+            // Set mobile system link
+            mobileSystemLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                NavigationManager.prepareForSystemNavigation('mobileSystem');
+                PasswordModal.openModal(
+                    'mobileSystem',
+                    'Mobile System',
+                    'Enter password to access the Mobile System'
+                );
+            });
+            
+            // Set data backup link
+            dataBackupLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                NavigationManager.prepareForSystemNavigation('dataBackup');
+                PasswordModal.openModal(
+                    'dataBackup',
+                    'Data Backup',
+                    'Enter password to access Data Backup'
+                );
+            });
+            
+            // Set terms link
+            footerTermsLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                NavigationManager.prepareForSystemNavigation('terms');
+                window.location.href = SYSTEM_URLS.terms;
+            });
+            
+            // Remove any title attributes to prevent tooltips
+            removeAllTooltips();
+        }
+        
+        // Function to remove all tooltips
+        function removeAllTooltips() {
+            // Remove title attributes from all buttons and links
+            const allButtons = document.querySelectorAll('button');
+            const allLinks = document.querySelectorAll('a');
+            
+            allButtons.forEach(button => {
+                button.removeAttribute('title');
+            });
+            
+            allLinks.forEach(link => {
+                link.removeAttribute('title');
+            });
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current year in footer
+            document.getElementById('year').textContent = new Date().getFullYear();
+            
+            // Remove all tooltips initially
+            removeAllTooltips();
+            
+            // Initialize PWA
+            setupPWA();
+            
+            // Set up install button click
+            document.getElementById('installAppBtn').addEventListener('click', handleInstallClick);
+            
+            // Set up close instructions button
+            document.getElementById('closeInstructions').addEventListener('click', function() {
+                const instructions = document.getElementById('installInstructions');
+                if (instructions) {
+                    instructions.style.display = 'none';
+                }
+            });
+            
+            // Initialize theme manager
+            ThemeManager.init();
+            
+            // Initialize password modal
+            PasswordModal.init();
+            
+            // Initialize coming soon modal
+            ComingSoonModal.init();
+            
+            // Initialize navigation manager
+            NavigationManager.init();
+            
+            // Show welcome back message if returning from system
+            if (isFromExternalSystem) {
+                showWelcomeBackMessage();
+            }
+            
+            // Online Store button is always visible and functional
+            // No loading needed for it
+            
+            // Detect device after a short delay (only for systems)
+            setTimeout(function() {
+                const device = detectDevice();
+                updateDetectionDisplay(device);
+            }, 1000);
+        });
+        
+        function showWelcomeBackMessage() {
+            const noteText = document.getElementById('noteText');
+            if (noteText) {
+                noteText.innerHTML = 'Welcome back! Choose a system to continue or use the "Back to Main" button above.';
+                noteText.style.color = 'var(--primary-color)';
+                noteText.style.fontWeight = '500';
+            }
+        }
+        
+        // Handle page before unload - store current state
+        window.addEventListener('beforeunload', function() {
+            // Store that we're leaving the hub
+            sessionStorage.setItem('leavingHub', 'true');
+        });
+    </script>
+</body>
+</html>
