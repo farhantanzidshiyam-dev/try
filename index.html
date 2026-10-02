@@ -1157,7 +1157,7 @@
                     <option value="fixed">Amount</option>
                     <option value="percent">%</option>
                   </select>
-                  <input type="number" id="invDiscountValue" min="0" step="1" value="0">
+                  <input type="number" id="invDiscountValue" min="0" step="1" placeholder="0">
                 </div>
               </div>
               <div class="invoice-total-row">
@@ -1170,7 +1170,7 @@
               </div>
               <div class="invoice-total-row">
                 <span class="invoice-total-label">Paid Amount</span>
-                <input type="number" id="invPaidAmount" min="0" step="1" value="0"
+                <input type="number" id="invPaidAmount" min="0" step="1" placeholder="0"
                        style="width:130px;padding:5px 8px;border:1px solid var(--border-strong);border-radius:4px;font-size:13px;font-family:inherit;background:var(--input-bg);color:var(--text);text-align:right;outline:none;">
               </div>
               <div class="invoice-total-row due-highlight">
@@ -1184,7 +1184,7 @@
             <div class="form-group">
               <label>Payment Method</label>
               <select id="invPaymentMethod">
-                <option value="Cash">Cash</option>
+                <option value="Cash" selected>Cash</option>
                 <option value="bKash">bKash</option>
                 <option value="Nagad">Nagad</option>
                 <option value="Card">Card</option>
@@ -1849,6 +1849,7 @@
           cloudStopAutoSync();
           loginBtn.disabled = false;
           loginBtn.innerHTML = '<i class="fas fa-right-to-bracket"></i> Sign in';
+          setTimeout(() => { const e = document.getElementById('authEmail'); if (e && document.activeElement !== e) e.focus(); }, 200);
         }
       });
 
@@ -2002,7 +2003,7 @@
           customerCount: customers.length,
           invoiceCount: invoices.length,
           updatedAt: window.FB.serverTimestamp(),
-          appVersion: '1.10.2-compact'
+          appVersion: '1.10.3-invoice-fix'
         }, { merge: true });
         lastPushedHash = JSON.stringify(customers);
         lastPushedInvoiceHash = JSON.stringify(invoices);
@@ -2185,7 +2186,7 @@
     async function sendTelegramBackup() {
       if (!telegramToken || !telegramChatId) { showToast('Telegram not configured.', 'error'); return; }
       if (customers.length === 0) { showToast('No customers to backup.', 'warning'); return; }
-      const payload = { customers, timestamp: new Date().toISOString(), count: customers.length, version: '1.10.2' };
+      const payload = { customers, timestamp: new Date().toISOString(), count: customers.length, version: '1.10.3' };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const formData = new FormData();
       formData.append('chat_id', telegramChatId);
@@ -3085,6 +3086,7 @@
       const footer = `<button class="btn" id="cancelDeleteBtn">Cancel</button><button class="btn btn-danger" id="confirmDeleteBtn">Delete Customer</button>`;
       openModal('Delete Customer', body, footer);
       document.getElementById('cancelDeleteBtn').addEventListener('click', closeModal);
+      setTimeout(() => { const p = document.getElementById('deletePasswordInput'); if (p) p.focus(); }, 100);
       document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
         const pass = document.getElementById('deletePasswordInput').value;
         if (pass !== ADMIN_PASSWORDS.deleteCustomer) {
@@ -3289,17 +3291,26 @@
     /* ============================================================
        INVOICE SYSTEM
        ============================================================ */
+
+    // Random unique invoice number (e.g. INV-6K4A9B2F)
     function generateInvoiceNumber() {
-      const year = new Date().getFullYear();
-      const prefix = `INV-${year}-`;
-      let maxSerial = 0;
-      invoices.forEach(inv => {
-        if (inv.invoiceNumber && inv.invoiceNumber.indexOf(prefix) === 0) {
-          const num = parseInt(inv.invoiceNumber.slice(prefix.length), 10);
-          if (!isNaN(num) && num > maxSerial) maxSerial = num;
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let id = '';
+      for (let i = 0; i < 8; i++) {
+        id += chars[Math.floor(Math.random() * chars.length)];
+      }
+      let num = 'INV-' + id;
+      // Safety: avoid collision with existing invoice numbers
+      let guard = 0;
+      while (invoices.some(inv => inv.invoiceNumber === num) && guard < 20) {
+        id = '';
+        for (let i = 0; i < 8; i++) {
+          id += chars[Math.floor(Math.random() * chars.length)];
         }
-      });
-      return prefix + String(maxSerial + 1).padStart(4, '0');
+        num = 'INV-' + id;
+        guard++;
+      }
+      return num;
     }
 
     function calcInvoiceItemTotal(it) {
@@ -3312,8 +3323,10 @@
     function getInvoiceTotals() {
       let subtotal = 0;
       invoiceWorkingItems.forEach(it => { subtotal += calcInvoiceItemTotal(it); });
-      const discType = document.getElementById('invDiscountType').value;
-      const discVal = Math.max(0, Number(document.getElementById('invDiscountValue').value) || 0);
+      const discTypeEl = document.getElementById('invDiscountType');
+      const discValEl = document.getElementById('invDiscountValue');
+      const discType = discTypeEl ? discTypeEl.value : 'fixed';
+      const discVal = Math.max(0, Number(discValEl && discValEl.value) || 0);
       let discountAmount = 0;
       if (discType === 'percent') {
         discountAmount = Math.min(subtotal, Math.round(subtotal * discVal / 100));
@@ -3324,7 +3337,8 @@
       const taxPercent = 0;
       const taxAmount = 0;
       const total = taxable + taxAmount;
-      const paid = Math.max(0, Number(document.getElementById('invPaidAmount').value) || 0);
+      const paidEl = document.getElementById('invPaidAmount');
+      const paid = Math.max(0, Number(paidEl && paidEl.value) || 0);
       const due = Math.max(0, total - paid);
       return { subtotal, discountAmount, taxPercent, taxAmount, total, paid, due };
     }
@@ -3342,8 +3356,6 @@
         else if (t.paid > 0) statusSel.value = 'Partial';
         else statusSel.value = 'Unpaid';
       }
-      const pmSel = document.getElementById('invPaymentMethod');
-      if (t.paid === 0 && pmSel.value !== 'Due') pmSel.value = 'Due';
     }
 
     function renderInvoiceItems() {
@@ -3356,12 +3368,15 @@
       }
       invoiceWorkingItems.forEach((it, idx) => {
         const tr = document.createElement('tr');
+        const qtyVal = (it.qty === 0 || it.qty === '' || it.qty === undefined || it.qty === null) ? '' : it.qty;
+        const priceVal = (it.price === 0 || it.price === '' || it.price === undefined || it.price === null) ? '' : it.price;
+        const discVal = (it.discount === 0 || it.discount === '' || it.discount === undefined || it.discount === null) ? '' : it.discount;
         tr.innerHTML = `
           <td style="text-align:center;color:var(--muted);font-weight:600;padding:8px 4px;">${idx + 1}</td>
           <td><input type="text" data-field="name" data-idx="${idx}" value="${escapeHtml(it.name || '')}" placeholder="Item description..."></td>
-          <td class="center"><input type="number" min="0" step="1" data-field="qty" data-idx="${idx}" value="${it.qty || 1}"></td>
-          <td class="right"><input type="number" min="0" step="1" data-field="price" data-idx="${idx}" value="${it.price || 0}"></td>
-          <td class="right"><input type="number" min="0" step="1" data-field="discount" data-idx="${idx}" value="${it.discount || 0}"></td>
+          <td class="center"><input type="number" min="0" step="1" data-field="qty" data-idx="${idx}" value="${qtyVal}" placeholder="0"></td>
+          <td class="right"><input type="number" min="0" step="1" data-field="price" data-idx="${idx}" value="${priceVal}" placeholder="0"></td>
+          <td class="right"><input type="number" min="0" step="1" data-field="discount" data-idx="${idx}" value="${discVal}" placeholder="0"></td>
           <td class="item-total">${formatMoneyOrZero(calcInvoiceItemTotal(it))}</td>
           <td style="text-align:center;">
             <button type="button" class="remove-item" data-remove="${idx}" title="Remove item">
@@ -3401,7 +3416,7 @@
     }
 
     function addInvoiceItemRow() {
-      invoiceWorkingItems.push({ name: '', qty: 1, price: 0, discount: 0 });
+      invoiceWorkingItems.push({ name: '', qty: 0, price: 0, discount: 0 });
       renderInvoiceItems();
       updateInvoiceTotals();
       const inputs = document.querySelectorAll('#invoiceItemsBody input[data-field="name"]');
@@ -3423,10 +3438,10 @@
         document.getElementById('invCustomerName').value = invoiceToEdit.customer.name || '';
         document.getElementById('invCustomerPhone').value = invoiceToEdit.customer.phone || '';
         document.getElementById('invCustomerAddress').value = invoiceToEdit.customer.address || '';
-        invoiceWorkingItems = invoiceToEdit.items.map(it => ({ name: it.name || '', qty: it.qty || 1, price: it.price || 0, discount: it.discount || 0 }));
+        invoiceWorkingItems = invoiceToEdit.items.map(it => ({ name: it.name || '', qty: it.qty || 0, price: it.price || 0, discount: it.discount || 0 }));
         document.getElementById('invDiscountType').value = invoiceToEdit.discountType || 'fixed';
-        document.getElementById('invDiscountValue').value = invoiceToEdit.discountValue || 0;
-        document.getElementById('invPaidAmount').value = invoiceToEdit.paid || 0;
+        document.getElementById('invDiscountValue').value = invoiceToEdit.discountValue || '';
+        document.getElementById('invPaidAmount').value = invoiceToEdit.paid || '';
         document.getElementById('invPaymentMethod').value = invoiceToEdit.paymentMethod || 'Cash';
         document.getElementById('invStatus').value = invoiceToEdit.status || 'Unpaid';
         document.getElementById('invNotes').value = invoiceToEdit.notes || '';
@@ -3438,10 +3453,10 @@
         document.getElementById('invCustomerName').value = '';
         document.getElementById('invCustomerPhone').value = '';
         document.getElementById('invCustomerAddress').value = '';
-        invoiceWorkingItems = [{ name: '', qty: 1, price: 0, discount: 0 }];
+        invoiceWorkingItems = [{ name: '', qty: 0, price: 0, discount: 0 }];
         document.getElementById('invDiscountType').value = 'fixed';
-        document.getElementById('invDiscountValue').value = 0;
-        document.getElementById('invPaidAmount').value = 0;
+        document.getElementById('invDiscountValue').value = '';
+        document.getElementById('invPaidAmount').value = '';
         document.getElementById('invPaymentMethod').value = 'Cash';
         document.getElementById('invStatus').value = 'Unpaid';
         document.getElementById('invNotes').value = '';
@@ -3541,6 +3556,8 @@
       const invNum = document.getElementById('invNumber').value;
       const dateISO = document.getElementById('invDate').value || todayISO();
       const custName = titleCase(name);
+      const discountValueNum = Number(document.getElementById('invDiscountValue').value) || 0;
+      const paidNum = Number(document.getElementById('invPaidAmount').value) || 0;
       const invoiceObj = {
         id: editingInvoiceId || generateId(),
         invoiceNumber: invNum,
@@ -3560,12 +3577,12 @@
         })),
         subtotal: totals.subtotal,
         discountType: document.getElementById('invDiscountType').value,
-        discountValue: Number(document.getElementById('invDiscountValue').value) || 0,
+        discountValue: discountValueNum,
         discountAmount: totals.discountAmount,
         taxPercent: totals.taxPercent,
         taxAmount: totals.taxAmount,
         total: totals.total,
-        paid: totals.paid,
+        paid: paidNum,
         due: totals.due,
         paymentMethod: document.getElementById('invPaymentMethod').value,
         status: document.getElementById('invStatus').value,
@@ -3926,7 +3943,7 @@
                 <td style="padding:8px 0;font-weight:800;color:var(--primary);font-size:15px;">TOTAL</td>
                 <td style="padding:8px 0;text-align:right;font-weight:800;color:var(--primary);font-size:15px;">${formatMoneyOrZero(inv.total)}</td>
               </tr>
-              <tr><td style="padding:5px 0;color:var(--muted);">Paid</td><td style="padding:5px 0;text-align:right;color:var(--success);font-weight:700;">-${formatMoneyOrZero(inv.paid)}</td></tr>
+              <tr><td style="padding:5px 0;color:var(--muted);">Paid</td><td style="padding:5px 0;text-align:right;color:var(--success);font-weight:700;">${formatMoneyOrZero(inv.paid)}</td></tr>
               <tr><td style="padding:5px 0;font-weight:800;color:var(--danger);">DUE</td><td style="padding:5px 0;text-align:right;font-weight:800;color:var(--danger);">${formatMoneyOrZero(inv.due)}</td></tr>
             </table>
           </div>
@@ -3974,6 +3991,7 @@
       const footer = `<button class="btn" id="invDelCancelBtn">Cancel</button><button class="btn btn-danger" id="invDelConfirmBtn">Delete Invoice</button>`;
       openModal('Delete Invoice', body, footer);
       document.getElementById('invDelCancelBtn').addEventListener('click', () => { closeModal(); });
+      setTimeout(() => { const p = document.getElementById('invDeletePass'); if (p) p.focus(); }, 100);
       document.getElementById('invDelConfirmBtn').addEventListener('click', async () => {
         const pass = document.getElementById('invDeletePass').value;
         if (pass !== ADMIN_PASSWORDS.deleteCustomer) {
@@ -3992,9 +4010,6 @@
       });
     }
 
-    /* ============================================================
-       INVOICE PRINT (Compact A4 + Clean QR)
-       ============================================================ */
     function buildInvoicePrintHTML(inv, qrSvg, publicUrl) {
       const itemsRows = inv.items.map((it, i) => `
         <tr style="border-bottom:1px solid #e5e7eb;">
@@ -4100,7 +4115,7 @@
                   </tr>
                   <tr>
                     <td style="padding:4px 8px;color:#57606a;">Paid</td>
-                    <td style="padding:4px 8px;text-align:right;color:#1a7f37;font-weight:700;">-${formatMoneyOrZero(inv.paid)}</td>
+                    <td style="padding:4px 8px;text-align:right;color:#1a7f37;font-weight:700;">${formatMoneyOrZero(inv.paid)}</td>
                   </tr>
                   <tr style="${dueRowStyle}">
                     <td style="padding:6px 8px;font-weight:800;color:#cf222e;text-transform:uppercase;letter-spacing:0.4px;">Due</td>
@@ -4253,7 +4268,7 @@
                 <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--border);color:var(--muted);"><span>Discount</span><span>-${formatMoneyOrZero(inv.discountAmount)}</span></div>
                 <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--border);color:var(--muted);"><span>Tax</span><span>${formatMoneyOrZero(inv.taxAmount)}</span></div>
                 <div style="display:flex;justify-content:space-between;padding:12px 0;border-top:2px solid var(--primary);border-bottom:2px solid var(--primary);color:var(--primary);font-weight:800;font-size:17px;"><span>TOTAL</span><span>${formatMoneyOrZero(inv.total)}</span></div>
-                <div style="display:flex;justify-content:space-between;padding:6px 0;color:var(--success);font-weight:700;"><span>Paid</span><span>-${formatMoneyOrZero(inv.paid)}</span></div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0;color:var(--success);font-weight:700;"><span>Paid</span><span>${formatMoneyOrZero(inv.paid)}</span></div>
                 <div style="display:flex;justify-content:space-between;padding:10px 0;color:var(--danger);font-weight:800;font-size:15px;"><span>DUE</span><span>${formatMoneyOrZero(inv.due)}</span></div>
               </div>
             </div>
@@ -4587,7 +4602,7 @@
           <strong>localStorage customer data:</strong> <span style="color:var(--success);font-weight:700;">None</span><br>
           <strong>Session persistence:</strong> <span style="color:var(--success);font-weight:700;">Remembered until logout</span><br>
           <strong>Logout cache purge:</strong> <span style="color:var(--success);font-weight:700;">Enabled</span><br>
-          <strong>App version:</strong> v1.10.2 (Compact Print)
+          <strong>App version:</strong> v1.10.3 (Invoice UX Fixes)
         </div>
         <h3 style="font-size:14px;font-weight:700;margin-bottom:8px;">Admin Password Sheet</h3>
         <table class="official-table" style="width:100%;">
@@ -4665,7 +4680,7 @@
             <p>Email: farhantanzidshiyam@gmail.com</p>
             <p>WhatsApp: +880131932189</p>
             <p>Facebook: <a href="https://web.facebook.com/farhantanzidshiyam" target="_blank">facebook.com/farhantanzidshiyam</a></p>
-            <p>RGCE SparkDesk v1.10.2 Compact Print</p>
+            <p>RGCE SparkDesk v1.10.3</p>
           `, '<button class="btn" onclick="closeModal()">Close</button>');
           break;
         case 'help':
@@ -4710,7 +4725,7 @@
       if (!window.FB) { console.error('Firebase not loaded yet'); return false; }
       try {
         setupAuth();
-        console.log('Auth setup complete (v1.10.2 compact print)');
+        console.log('Auth setup complete (v1.10.3)');
         return true;
       } catch (e) {
         console.error('setupAuth failed:', e);
@@ -5028,6 +5043,7 @@
         });
       }
 
+      /* Global Enter key handler */
       document.addEventListener('keydown', function(e) {
         if (e.key !== 'Enter' || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
         var target = e.target;
@@ -5039,6 +5055,8 @@
         if (modalOverlay && modalOverlay.classList.contains('open')) {
           e.preventDefault();
           var btn = document.querySelector('#modalFooter .btn-primary')
+                 || document.querySelector('#modalFooter .btn-success')
+                 || document.querySelector('#modalFooter .btn-danger')
                  || document.querySelector('#modalBody .btn-primary');
           if (btn && !btn.disabled) btn.click();
           return;
@@ -5057,6 +5075,12 @@
       setTimeout(() => {
         showToast('Welcome to Roza Gift Corner & Electric', 'info');
       }, 800);
+
+      // Focus email field on login screen
+      const emailField = document.getElementById('authEmail');
+      if (emailField && document.getElementById('authOverlay').style.display !== 'none') {
+        setTimeout(() => emailField.focus(), 250);
+      }
 
       window.addEventListener('online', () => {
         updateCloudBadge('syncing', 'Reconnecting…');
