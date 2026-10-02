@@ -8,11 +8,14 @@
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
   <link rel="dns-prefetch" href="https://www.gstatic.com">
   <link rel="dns-prefetch" href="https://firestore.googleapis.com">
   <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
   <script>
     (function() {
@@ -92,10 +95,7 @@
       transition: background 0.15s ease;
     }
     body.dark-mode #authOverlay { background: #14181f; }
-    #authOverlay .auth-container {
-      width: 100%; max-width: 440px;
-      display: flex; flex-direction: column; align-items: center; margin: auto;
-    }
+    #authOverlay .auth-container { width: 100%; max-width: 440px; display: flex; flex-direction: column; align-items: center; margin: auto; }
     #authOverlay .auth-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
     #authOverlay .auth-brand-mark {
       width: 44px; height: 44px; background: #1f4e79; color: #ffffff;
@@ -762,7 +762,6 @@
     .autocomplete-item:hover, .autocomplete-item.highlighted { background: var(--primary-light); }
     .autocomplete-item-name { font-weight: 600; color: var(--text); }
     .autocomplete-item-detail { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .autocomplete-empty { padding: 12px; text-align: center; font-size: 12px; color: var(--muted); }
 
     .invoice-filters {
       display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
@@ -1493,7 +1492,7 @@
     let searchState = { floating:false, locked:false, left:20, top:100, width:400, height:44 };
 
     let customers = [];
-    let invoices = [];              // Invoice data - completely separate from customers
+    let invoices = [];
     let filteredCustomers = [];
     let currentPage = 1;
     let pageSize = 35;
@@ -1501,8 +1500,8 @@
     let sortDirection = 'asc';
     let formVisible = false;
     let invoiceFormVisible = false;
-    let editingInvoiceId = null;    // null = create new, otherwise edit existing
-    let invoiceWorkingItems = [];   // temporary line items for current form
+    let editingInvoiceId = null;
+    let invoiceWorkingItems = [];
     let invoiceFilters = { search:'', status:'', dateFrom:'', dateTo:'' };
     let lastBackupDownload = null;
     let lastSyncTime = null;
@@ -1606,7 +1605,7 @@
     }
 
     /* ============================================================
-       NUMBER TO WORDS (Bangladeshi format: Lakh, Crore)
+       NUMBER TO WORDS
        ============================================================ */
     function numberToWords(num) {
       num = Math.round(Number(num) || 0);
@@ -1893,6 +1892,8 @@
           cloudStartAutoSync();
           showToast('☁️ Connected as ' + user.email, 'success');
         } else {
+          // If viewing public invoice via QR, do not show login overlay
+          if (window.__publicInvoiceMode) return;
           customers = []; invoices = [];
           lastPushedHash = ''; lastPushedInvoiceHash = '';
           cloudReady = false;
@@ -1972,7 +1973,6 @@
             return c;
           });
           lastPushedHash = JSON.stringify(customers);
-          // Load invoices separately (independent from customers)
           invoices = Array.isArray(cloud.invoices) ? cloud.invoices : [];
           invoices = invoices.map(inv => {
             inv.items = Array.isArray(inv.items) ? inv.items : [];
@@ -2056,7 +2056,7 @@
           customerCount: customers.length,
           invoiceCount: invoices.length,
           updatedAt: window.FB.serverTimestamp(),
-          appVersion: '1.10.0-invoice'
+          appVersion: '1.10.1-public-qr'
         }, { merge: true });
         lastPushedHash = JSON.stringify(customers);
         lastPushedInvoiceHash = JSON.stringify(invoices);
@@ -2125,7 +2125,7 @@
     window.__updateCloudBadge = updateCloudBadge;
 
     /* ============================================================
-       GOOGLE SHEETS PUSH (customers only, invoices excluded by design)
+       GOOGLE SHEETS PUSH (customers only)
        ============================================================ */
     async function syncToGoogleSheets(silent = false) {
       if (!APPS_SCRIPT_URL) { if (!silent) showToast('Google Sheets not configured.', 'error'); return; }
@@ -2245,7 +2245,7 @@
     async function sendTelegramBackup() {
       if (!telegramToken || !telegramChatId) { showToast('Telegram not configured.', 'error'); return; }
       if (customers.length === 0) { showToast('No customers to backup.', 'warning'); return; }
-      const payload = { customers, timestamp: new Date().toISOString(), count: customers.length, version: '1.10.0' };
+      const payload = { customers, timestamp: new Date().toISOString(), count: customers.length, version: '1.10.1' };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const formData = new FormData();
       formData.append('chat_id', telegramChatId);
@@ -3428,14 +3428,12 @@
       document.getElementById('invTaxAmount').textContent = formatMoneyOrZero(t.taxAmount);
       document.getElementById('invGrandTotal').textContent = formatMoneyOrZero(t.total);
       document.getElementById('invDueAmount').textContent = formatMoneyOrZero(t.due);
-      // Auto status suggestion
       const statusSel = document.getElementById('invStatus');
       if (t.total > 0) {
         if (t.paid >= t.total) statusSel.value = 'Paid';
         else if (t.paid > 0) statusSel.value = 'Partial';
         else statusSel.value = 'Unpaid';
       }
-      // Auto payment method suggestion
       const pmSel = document.getElementById('invPaymentMethod');
       if (t.paid === 0 && pmSel.value !== 'Due') pmSel.value = 'Due';
     }
@@ -3476,7 +3474,6 @@
           } else {
             invoiceWorkingItems[idx][field] = Math.max(0, Number(e.target.value) || 0);
           }
-          // Update line total
           const tr = e.target.closest('tr');
           if (tr) {
             const totalCell = tr.querySelector('.item-total');
@@ -3501,13 +3498,11 @@
       invoiceWorkingItems.push({ name: '', qty: 1, price: 0, discount: 0 });
       renderInvoiceItems();
       updateInvoiceTotals();
-      // Focus the last item's name input
       const inputs = document.querySelectorAll('#invoiceItemsBody input[data-field="name"]');
       if (inputs.length > 0) inputs[inputs.length - 1].focus();
     }
 
     function openInvoiceForm(invoiceToEdit) {
-      // Close other form panel
       hideAddForm();
       const panel = document.getElementById('invoiceFormPanel');
       if (!panel) return;
@@ -3560,16 +3555,80 @@
       invoiceFormVisible = false;
       editingInvoiceId = null;
       invoiceWorkingItems = [];
-      // Hide autocomplete if open
       const dd = document.getElementById('invCustomerDropdown');
       if (dd) dd.classList.remove('open');
+    }
+
+    /* ============================================================
+       PUBLIC INVOICE — helpers
+       ============================================================ */
+    function getAppBaseUrl() {
+      const origin = window.location.origin;
+      let path = window.location.pathname.replace(/\/[^/]*\.html?$/i, '/');
+      if (!path.endsWith('/')) path += '/';
+      return origin + path;
+    }
+    function buildInvoicePublicUrl(inv) {
+      return getAppBaseUrl() + '?inv=' + encodeURIComponent(inv.invoiceNumber);
+    }
+    async function generateQRDataURL(text, size) {
+      if (!window.QRCode) return '';
+      try {
+        const s = size || 160;
+        return await window.QRCode.toDataURL(text, {
+          width: s,
+          margin: 1,
+          errorCorrectionLevel: 'M',
+          color: { dark: '#1f4e79', light: '#ffffff' }
+        });
+      } catch (e) {
+        console.warn('QR generation failed:', e);
+        return '';
+      }
+    }
+
+    /* ============================================================
+       PUBLIC INVOICE — publish to Firestore
+       ============================================================ */
+    async function publishInvoicePublic(inv) {
+      if (!currentUser) return false;
+      try {
+        const ref = window.FB.doc(window.FB.db, 'public_invoices', inv.invoiceNumber);
+        await window.FB.setDoc(ref, {
+          invoiceNumber: inv.invoiceNumber,
+          dateISO: inv.dateISO,
+          dateDisplay: inv.dateDisplay,
+          customerName: inv.customer.name,
+          customerPhone: inv.customer.phone || '',
+          customerAddress: inv.customer.address || '',
+          items: inv.items,
+          subtotal: inv.subtotal,
+          discountAmount: inv.discountAmount,
+          taxAmount: inv.taxAmount,
+          taxPercent: inv.taxPercent,
+          total: inv.total,
+          paid: inv.paid,
+          due: inv.due,
+          paymentMethod: inv.paymentMethod,
+          status: inv.status,
+          notes: inv.notes || '',
+          shopName: 'Roza Gift Corner & Electric',
+          shopPhone: '+8801715986646',
+          shopAddress: 'Moshjid Market, Naohata Mor, Mohadevpur, Naogaon',
+          publishedBy: currentUser.uid,
+          publishedAt: window.FB.serverTimestamp()
+        }, { merge: true });
+        return true;
+      } catch (e) {
+        console.warn('Failed to publish invoice publicly:', e);
+        return false;
+      }
     }
 
     function saveInvoiceAndPrint(shouldPrint) {
       if (!currentUser) { showToast('Please login first.', 'warning'); return; }
       const name = document.getElementById('invCustomerName').value.trim();
       if (!name) { showToast('Customer name is required.', 'error'); return; }
-      // Filter out empty item rows
       const validItems = invoiceWorkingItems.filter(it => (it.name || '').trim() !== '' || (Number(it.price) || 0) > 0);
       if (validItems.length === 0) { showToast('Add at least one item.', 'error'); return; }
 
@@ -3619,9 +3678,8 @@
         invoices.push(invoiceObj);
       }
 
-      // Save to cloud
       if (typeof cloudSchedule === 'function') cloudSchedule();
-      // Update badge
+      publishInvoicePublic(invoiceObj).catch(err => console.warn('Publish failed:', err));
       showToast('✅ Invoice ' + invNum + ' saved', 'success');
       closeInvoiceForm();
       if (shouldPrint) {
@@ -3642,7 +3700,7 @@
         if (!q || q.length < 1) return [];
         const lower = q.toLowerCase();
         return customers
-          .filter(c => (c.name || '').toLowerCase().includes(lower) || (c.phone || '').includes(lower))
+          .filter(c => (c.name || '').toLowerCase().includes(lower) || (c.phone || '').includes(q))
           .slice(0, 8);
       }
 
@@ -3991,6 +4049,7 @@
         </div>
       `;
       const footer = `
+        <button class="btn btn-outline" id="invPrevCopyLinkBtn"><i class="fas fa-link"></i> Copy Public Link</button>
         <button class="btn btn-print" id="invPrevPrintBtn"><i class="fas fa-print"></i> Print</button>
         <button class="btn btn-outline" id="invPrevEditBtn"><i class="fas fa-edit"></i> Edit</button>
         <button class="btn btn-danger" id="invPrevDelBtn"><i class="fas fa-trash"></i> Delete</button>
@@ -4001,6 +4060,16 @@
       document.getElementById('invPrevPrintBtn').addEventListener('click', () => { closeModal(); setTimeout(() => printInvoice(id), 220); });
       document.getElementById('invPrevEditBtn').addEventListener('click', () => { closeModal(); setTimeout(() => openInvoiceForm(inv), 220); });
       document.getElementById('invPrevDelBtn').addEventListener('click', () => { closeModal(); setTimeout(() => deleteInvoice(id), 220); });
+      document.getElementById('invPrevCopyLinkBtn').addEventListener('click', async () => {
+        await publishInvoicePublic(inv);
+        const url = buildInvoicePublicUrl(inv);
+        try {
+          await navigator.clipboard.writeText(url);
+          showToast('✅ Public link copied to clipboard', 'success');
+        } catch (err) {
+          prompt('Copy this link manually:', url);
+        }
+      });
     }
 
     /* ============================================================
@@ -4021,19 +4090,23 @@
       openModal('Delete Invoice', body, footer);
       document.getElementById('invDelCancelBtn').addEventListener('click', () => {
         closeModal();
-        // If list was open before, don't auto-reopen — user can reopen manually
       });
-      document.getElementById('invDelConfirmBtn').addEventListener('click', () => {
+      document.getElementById('invDelConfirmBtn').addEventListener('click', async () => {
         const pass = document.getElementById('invDeletePass').value;
         if (pass !== ADMIN_PASSWORDS.deleteCustomer) {
           document.getElementById('invDeletePassErr').classList.add('visible');
           return;
         }
+        // Remove from public collection as well
+        try {
+          const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+          await deleteDoc(window.FB.doc(window.FB.db, 'public_invoices', inv.invoiceNumber));
+        } catch (e) { console.warn('Failed to remove public copy:', e); }
+
         invoices = invoices.filter(i => i.id !== id);
         if (typeof cloudSchedule === 'function') cloudSchedule();
         showToast('Invoice deleted.', 'success');
         closeModal();
-        // If list modal was open, we closed it before. Reopen to refresh
         setTimeout(() => { if (document.querySelector('.sidebar-item[data-action="allInvoices"]')) openInvoiceListModal(); }, 250);
       });
     }
@@ -4041,27 +4114,7 @@
     /* ============================================================
        INVOICE PRINT (Modern A4 + QR)
        ============================================================ */
-    function buildInvoiceQRData(inv) {
-      // Compact summary, URL-safe
-      const summary = [
-        'INV:' + inv.invoiceNumber,
-        'DT:' + (inv.dateDisplay || ''),
-        'CUST:' + (inv.customer.name || ''),
-        'TOT:' + inv.total,
-        'PAID:' + inv.paid,
-        'DUE:' + inv.due,
-        'SHOP:RGCE'
-      ].join('|');
-      return summary;
-    }
-
-    function getInvoiceQRUrl(inv, size) {
-      const data = buildInvoiceQRData(inv);
-      const s = size || 140;
-      return 'https://api.qrserver.com/v1/create-qr-code/?size=' + s + 'x' + s + '&data=' + encodeURIComponent(data);
-    }
-
-    function buildInvoicePrintHTML(inv) {
+    function buildInvoicePrintHTML(inv, qrDataUrl, publicUrl) {
       const itemsRows = inv.items.map((it, i) => `
         <tr style="border-bottom:1px solid #e5e7eb;">
           <td style="padding:10px 8px;font-size:12px;color:#1f2328;">${i + 1}</td>
@@ -4073,14 +4126,12 @@
         </tr>
       `).join('');
 
-      const qrUrl = getInvoiceQRUrl(inv, 140);
       const amountWords = numberToWords(inv.total);
       const statusColor = inv.status === 'Paid' ? '#1a7f37' : (inv.status === 'Partial' ? '#bf8700' : '#cf222e');
       const dueRowStyle = inv.due > 0 ? 'background:#ffebe9;' : '';
 
       return `
         <div style="font-family:'Helvetica Neue',Arial,sans-serif;color:#1f2328;max-width:210mm;margin:0 auto;">
-          <!-- HEADER -->
           <table style="width:100%;border-collapse:collapse;margin-bottom:22px;">
             <tr>
               <td style="vertical-align:top;padding-bottom:14px;border-bottom:3px solid #1f4e79;">
@@ -4102,7 +4153,6 @@
             </tr>
           </table>
 
-          <!-- CUSTOMER + PAYMENT -->
           <table style="width:100%;border-collapse:collapse;margin-bottom:26px;">
             <tr>
               <td style="width:55%;vertical-align:top;padding-right:20px;">
@@ -4124,7 +4174,6 @@
             </tr>
           </table>
 
-          <!-- ITEMS TABLE -->
           <table style="width:100%;border-collapse:collapse;margin-bottom:22px;font-size:12px;">
             <thead>
               <tr style="background:#1f4e79;color:#ffffff;">
@@ -4139,7 +4188,6 @@
             <tbody>${itemsRows}</tbody>
           </table>
 
-          <!-- TOTALS + NOTES + QR -->
           <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
             <tr>
               <td style="width:55%;vertical-align:top;padding-right:20px;">
@@ -4183,18 +4231,20 @@
             </tr>
           </table>
 
-          <!-- QR + FOOTER -->
           <table style="width:100%;border-collapse:collapse;margin-top:24px;border-top:2px solid #e5e7eb;padding-top:18px;">
             <tr>
               <td style="vertical-align:middle;padding:18px 20px 0 0;">
                 <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#57606a;margin-bottom:6px;">Scan to Verify</div>
                 <div style="font-size:11px;color:#57606a;line-height:1.6;">
-                  Scan this QR code to view the complete invoice details.<br>
+                  Scan this QR code to view the complete invoice details online.<br>
                   This is a computer-generated document — no signature required.
                 </div>
               </td>
               <td style="text-align:right;width:160px;vertical-align:middle;padding-top:18px;">
-                <img src="${qrUrl}" alt="QR Code" style="width:140px;height:140px;border:2px solid #1f4e79;padding:5px;border-radius:8px;background:#ffffff;">
+                ${qrDataUrl
+                  ? `<img src="${qrDataUrl}" alt="QR Code" style="width:140px;height:140px;border:2px solid #1f4e79;padding:5px;border-radius:8px;background:#ffffff;display:block;">`
+                  : `<div style="width:140px;height:140px;border:2px dashed #1f4e79;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#57606a;text-align:center;padding:10px;">QR Unavailable</div>`}
+                <div style="font-size:8px;color:#8c959f;margin-top:4px;text-align:center;word-break:break-all;max-width:140px;">${publicUrl ? escapeHtml(publicUrl) : ''}</div>
               </td>
             </tr>
           </table>
@@ -4208,15 +4258,166 @@
       `;
     }
 
-    function printInvoice(id) {
+    async function printInvoice(id) {
       const inv = invoices.find(i => i.id === id);
       if (!inv) { showToast('Invoice not found.', 'error'); return; }
-      const html = buildInvoicePrintHTML(inv);
+      const publicUrl = buildInvoicePublicUrl(inv);
+      const qrDataUrl = await generateQRDataURL(publicUrl, 160);
+      publishInvoicePublic(inv).catch(() => {});
+      const html = buildInvoicePrintHTML(inv, qrDataUrl, publicUrl);
       triggerPrint(html);
     }
 
     /* ============================================================
-       EXPOSE FOR MODALS (existing)
+       PUBLIC INVOICE VIEW (login-free, accessed via QR link)
+       ============================================================ */
+    async function showPublicInvoiceView(invNum) {
+      window.__publicInvoiceMode = true;
+      const overlay = document.getElementById('authOverlay');
+      if (overlay) overlay.style.display = 'none';
+      document.querySelectorAll('.gov-strip, .official-header, .search-wrapper, .app-body, .app-footer, .admin-link').forEach(el => {
+        if (el) el.style.display = 'none';
+      });
+
+      let container = document.getElementById('publicInvoiceView');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'publicInvoiceView';
+        container.style.cssText = 'min-height:100vh;padding:24px 16px;background:var(--bg);color:var(--text);font-family:inherit;';
+        document.body.appendChild(container);
+      }
+      container.innerHTML = `<div style="text-align:center;padding:80px 20px;color:var(--muted);"><i class="fas fa-spinner fa-spin" style="font-size:32px;color:var(--primary);"></i><div style="margin-top:14px;font-size:14px;">Loading invoice ${escapeHtml(invNum)}…</div></div>`;
+
+      try {
+        if (!window.FB) throw new Error('Firebase not loaded');
+        const ref = window.FB.doc(window.FB.db, 'public_invoices', invNum);
+        const snap = await window.FB.getDoc(ref);
+        if (!snap.exists()) {
+          container.innerHTML = `<div style="max-width:520px;margin:60px auto;text-align:center;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:40px 24px;">
+            <i class="fas fa-file-circle-exclamation" style="font-size:48px;color:var(--danger);margin-bottom:16px;pointer-events:none;"></i>
+            <h2 style="margin:0 0 8px 0;color:var(--text);font-size:20px;">Invoice Not Found</h2>
+            <p style="color:var(--muted);margin:0;font-size:13px;">Invoice <strong>${escapeHtml(invNum)}</strong> does not exist or has been removed.</p>
+          </div>`;
+          return;
+        }
+        renderPublicInvoiceView(container, snap.data());
+      } catch (e) {
+        console.error('Public invoice view failed:', e);
+        container.innerHTML = `<div style="max-width:520px;margin:60px auto;text-align:center;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:40px 24px;">
+          <i class="fas fa-triangle-exclamation" style="font-size:48px;color:var(--warning);margin-bottom:16px;pointer-events:none;"></i>
+          <h2 style="margin:0 0 8px 0;color:var(--text);font-size:20px;">Could Not Load</h2>
+          <p style="color:var(--muted);margin:0;font-size:13px;">Please check your internet connection and try again.</p>
+        </div>`;
+      }
+    }
+
+    function renderPublicInvoiceView(container, inv) {
+      const itemsRows = (inv.items || []).map((it, i) => `
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:9px 8px;font-size:12px;">${i + 1}</td>
+          <td style="padding:9px 8px;font-size:12px;font-weight:600;">${escapeHtml(it.name)}</td>
+          <td style="padding:9px 8px;font-size:12px;text-align:center;">${it.qty}</td>
+          <td style="padding:9px 8px;font-size:12px;text-align:right;">${formatMoneyOrZero(it.price)}</td>
+          <td style="padding:9px 8px;font-size:12px;text-align:right;">${formatMoneyOrZero(it.discount)}</td>
+          <td style="padding:9px 8px;font-size:12px;text-align:right;font-weight:700;">${formatMoneyOrZero(it.total)}</td>
+        </tr>
+      `).join('');
+      const statusColor = inv.status === 'Paid' ? '#1a7f37' : (inv.status === 'Partial' ? '#bf8700' : '#cf222e');
+
+      container.innerHTML = `
+        <div style="max-width:820px;margin:0 auto;">
+          <div style="text-align:center;margin-bottom:20px;">
+            <div style="display:inline-flex;align-items:center;gap:12px;padding:10px 20px;background:var(--panel);border:1px solid var(--border);border-radius:12px;">
+              <div style="width:38px;height:38px;background:#1f4e79;color:#fff;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;"><i class="fas fa-shield-halved"></i></div>
+              <div style="text-align:left;">
+                <div style="font-size:14px;font-weight:700;color:var(--text);">RGCE SparkDesk</div>
+                <div style="font-size:11px;color:var(--muted);">Invoice Verification</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-md);">
+            <div style="background:#1f4e79;color:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+              <div>
+                <div style="font-size:11px;opacity:0.85;text-transform:uppercase;letter-spacing:1px;">Invoice</div>
+                <div style="font-size:22px;font-weight:800;margin-top:2px;">${escapeHtml(inv.invoiceNumber)}</div>
+                <div style="font-size:12px;opacity:0.85;margin-top:4px;">${escapeHtml(inv.dateDisplay || '')}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:11px;opacity:0.85;text-transform:uppercase;letter-spacing:1px;">Shop</div>
+                <div style="font-size:14px;font-weight:700;margin-top:2px;">${escapeHtml(inv.shopName || 'Roza Gift Corner & Electric')}</div>
+                <div style="font-size:11px;opacity:0.85;margin-top:2px;">${escapeHtml(inv.shopPhone || '')}</div>
+              </div>
+            </div>
+
+            <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div>
+                <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:6px;">Bill To</div>
+                <div style="font-size:15px;font-weight:700;color:var(--text);">${escapeHtml(inv.customerName || '')}</div>
+                ${inv.customerPhone ? `<div style="font-size:12px;color:var(--muted);margin-top:3px;">${escapeHtml(inv.customerPhone)}</div>` : ''}
+                ${inv.customerAddress ? `<div style="font-size:12px;color:var(--muted);margin-top:2px;">${escapeHtml(inv.customerAddress)}</div>` : ''}
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:6px;">Status</div>
+                <span style="display:inline-block;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:0.6px;color:#fff;background:${statusColor};text-transform:uppercase;">${escapeHtml(inv.status)}</span>
+                <div style="font-size:12px;color:var(--muted);margin-top:8px;">Paid via <strong>${escapeHtml(inv.paymentMethod)}</strong></div>
+              </div>
+            </div>
+
+            <div style="padding:20px 24px;border-bottom:1px solid var(--border);overflow-x:auto;">
+              <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                <thead>
+                  <tr style="background:var(--panel-alt);">
+                    <th style="padding:9px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:2px solid var(--border);width:36px;">#</th>
+                    <th style="padding:9px 8px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:2px solid var(--border);">Item</th>
+                    <th style="padding:9px 8px;text-align:center;font-size:10px;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:2px solid var(--border);width:50px;">Qty</th>
+                    <th style="padding:9px 8px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:2px solid var(--border);width:90px;">Price</th>
+                    <th style="padding:9px 8px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:2px solid var(--border);width:80px;">Disc</th>
+                    <th style="padding:9px 8px;text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted);border-bottom:2px solid var(--border);width:100px;">Total</th>
+                  </tr>
+                </thead>
+                <tbody>${itemsRows}</tbody>
+              </table>
+            </div>
+
+            <div style="padding:20px 24px;">
+              <div style="max-width:340px;margin-left:auto;font-size:13px;">
+                <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--border);color:var(--muted);"><span>Subtotal</span><span>${formatMoneyOrZero(inv.subtotal)}</span></div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--border);color:var(--muted);"><span>Discount</span><span>-${formatMoneyOrZero(inv.discountAmount)}</span></div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--border);color:var(--muted);"><span>Tax</span><span>${formatMoneyOrZero(inv.taxAmount)}</span></div>
+                <div style="display:flex;justify-content:space-between;padding:12px 0;border-top:2px solid var(--primary);border-bottom:2px solid var(--primary);color:var(--primary);font-weight:800;font-size:17px;"><span>TOTAL</span><span>${formatMoneyOrZero(inv.total)}</span></div>
+                <div style="display:flex;justify-content:space-between;padding:6px 0;color:var(--success);font-weight:700;"><span>Paid</span><span>-${formatMoneyOrZero(inv.paid)}</span></div>
+                <div style="display:flex;justify-content:space-between;padding:10px 0;color:var(--danger);font-weight:800;font-size:15px;"><span>DUE</span><span>${formatMoneyOrZero(inv.due)}</span></div>
+              </div>
+            </div>
+
+            ${inv.notes ? `<div style="padding:0 24px 20px;"><div style="background:var(--panel-alt);border-left:3px solid var(--primary);padding:12px 14px;border-radius:4px;font-size:12px;color:var(--text);"><strong>Notes:</strong> ${escapeHtml(inv.notes)}</div></div>` : ''}
+
+            <div style="padding:16px 24px 20px;border-top:1px dashed var(--border);text-align:center;font-size:11px;color:var(--muted);">
+              Verified invoice from <strong>${escapeHtml(inv.shopName || 'Roza Gift Corner & Electric')}</strong><br>
+              ${escapeHtml(inv.shopAddress || '')}
+            </div>
+          </div>
+
+          <div style="text-align:center;margin-top:20px;font-size:11px;color:var(--muted);">
+            © 2025 Roza Gift Corner &amp; Electric
+          </div>
+        </div>
+      `;
+    }
+
+    function checkPublicInvoiceView() {
+      const params = new URLSearchParams(window.location.search);
+      const invNum = params.get('inv');
+      if (!invNum) return false;
+      const show = () => showPublicInvoiceView(invNum);
+      if (window.FB) show();
+      else window.addEventListener('firebase-ready', show, { once: true });
+      return true;
+    }
+
+    /* ============================================================
+       EXPOSE FOR MODALS
        ============================================================ */
     window.__app = {
       showToast, triggerPrint, saveData, renderTable, refreshAddressFilter,
@@ -4232,7 +4433,6 @@
       setCustomers: (arr) => { customers = arr; },
       logTxn, buildTxnRecord, txnApiConfigured, fetchTxnFromSheet,
       refreshFromCloud,
-      // invoice
       openInvoiceForm, closeInvoiceForm, openInvoiceListModal, printInvoice
     };
 
@@ -4359,7 +4559,7 @@
     }
 
     /* ============================================================
-       BACKUP / RESTORE (customers only — invoices intentionally excluded)
+       BACKUP / RESTORE
        ============================================================ */
     function openBackupRestoreModal() {
       const body = `
@@ -4550,7 +4750,7 @@
           <strong>localStorage customer data:</strong> <span style="color:var(--success);font-weight:700;">None</span><br>
           <strong>Session persistence:</strong> <span style="color:var(--success);font-weight:700;">Remembered until logout</span><br>
           <strong>Logout cache purge:</strong> <span style="color:var(--success);font-weight:700;">Enabled</span><br>
-          <strong>App version:</strong> v1.10.0 (Invoice System)
+          <strong>App version:</strong> v1.10.1 (Public QR)
         </div>
         <h3 style="font-size:14px;font-weight:700;margin-bottom:8px;">Admin Password Sheet</h3>
         <table class="official-table" style="width:100%;">
@@ -4590,14 +4790,8 @@
         case 'backupRestore': openBackupRestoreModal(); break;
         case 'telegramBackup': openTelegramSetup(); break;
         case 'googleSheets': openGoogleSheetsPanel(); break;
-
-        case 'createInvoice':
-          openInvoiceForm();
-          break;
-        case 'allInvoices':
-          openInvoiceListModal();
-          break;
-
+        case 'createInvoice': openInvoiceForm(); break;
+        case 'allInvoices': openInvoiceListModal(); break;
         case 'clearNotes':
           promptPassword('Enter password to clear all notes', ADMIN_PASSWORDS.clearNotes, () => {
             customers.forEach(c => c.note = '');
@@ -4637,11 +4831,11 @@
             <p>Email: farhantanzidshiyam@gmail.com</p>
             <p>WhatsApp: +880131932189</p>
             <p>Facebook: <a href="https://web.facebook.com/farhantanzidshiyam" target="_blank">facebook.com/farhantanzidshiyam</a></p>
-            <p>RGCE SparkDesk v1.10.0 Invoice System</p>
+            <p>RGCE SparkDesk v1.10.1 Public QR</p>
           `, '<button class="btn" onclick="closeModal()">Close</button>');
           break;
         case 'help':
-          openModal('Help', '<p>Use the sidebar to navigate. Customer Management and Invoice System are completely separate. Invoices do not affect customer dues.</p>', '<button class="btn" onclick="closeModal()">Close</button>');
+          openModal('Help', '<p>Use the sidebar to navigate. Customer Management and Invoice System are completely separate. Invoices do not affect customer dues. Public QR links let you share invoices without login.</p>', '<button class="btn" onclick="closeModal()">Close</button>');
           break;
         default: showToast('Feature coming soon.', 'info');
       }
@@ -4688,7 +4882,7 @@
       if (!window.FB) { console.error('Firebase not loaded yet'); return false; }
       try {
         setupAuth();
-        console.log('Auth setup complete (v1.10.0 invoice system)');
+        console.log('Auth setup complete (v1.10.1 public qr)');
         return true;
       } catch (e) {
         console.error('setupAuth failed:', e);
@@ -4709,6 +4903,9 @@
     })();
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Public invoice view via QR link — skip normal app init
+      if (checkPublicInvoiceView()) return;
+
       try {
         localStorage.removeItem('roza_gift_corner_customers_v1.5');
         localStorage.removeItem('rgce_local_updated');
@@ -4858,7 +5055,7 @@
         });
       }
 
-      // ============ INVOICE FORM WIRING ============
+      // Invoice form wiring
       const closeInvBtn = document.getElementById('closeInvoiceFormBtn');
       if (closeInvBtn) closeInvBtn.addEventListener('click', closeInvoiceForm);
       const cancelInvBtn = document.getElementById('cancelInvoiceFormBtn');
@@ -4870,17 +5067,13 @@
       const saveAndPrintBtn = document.getElementById('saveAndPrintInvoiceBtn');
       if (saveAndPrintBtn) saveAndPrintBtn.addEventListener('click', () => saveInvoiceAndPrint(true));
 
-      // Invoice totals live update
       ['invDiscountType','invDiscountValue','invPaidAmount'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', updateInvoiceTotals);
         if (el) el.addEventListener('change', updateInvoiceTotals);
       });
 
-      // Invoice autocomplete
       setupInvoiceAutocomplete();
-
-      // ============ END INVOICE WIRING ============
 
       const gs = document.getElementById('globalSearch');
       if (gs) gs.addEventListener('input', () => { currentPage = 1; renderTable(); });
@@ -5009,7 +5202,6 @@
         });
       }
 
-      /* Global Enter key handler */
       document.addEventListener('keydown', function(e) {
         if (e.key !== 'Enter' || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
         var target = e.target;
@@ -5037,7 +5229,7 @@
       }, true);
 
       setTimeout(() => {
-        showToast('Welcome to RGCE SparkDesk v1.10.0 — Invoice System Ready', 'info');
+        showToast('Welcome to RGCE SparkDesk v1.10.1 — Public QR Ready', 'info');
       }, 800);
 
       window.addEventListener('online', () => {
