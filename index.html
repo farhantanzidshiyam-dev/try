@@ -3582,7 +3582,8 @@
         const cellSize = Math.max(2, Math.floor((s - 20) / count));
         const margin = Math.max(0, Math.floor((s - cellSize * count) / 2));
         let svg = qr.createSvgTag({ cellSize: cellSize, margin: margin, scalable: true });
-        svg = svg.replace('<svg ', `<svg width="${s}" height="${s}" `);
+                svg = svg.replace('stroke="#000000"', 'stroke="none"');
+        svg = svg.replace('fill="#ffffff"', 'fill="none"');
         return svg;
       } catch (e) {
         console.warn('QR generation failed:', e);
@@ -4245,8 +4246,9 @@
               </td>
                             <td style="text-align:right;width:160px;vertical-align:middle;padding-top:18px;">
                 ${qrSvg
-                  ? `<div style="width:140px;height:140px;border:2px solid #1f4e79;padding:5px;border-radius:8px;background:#ffffff;display:inline-block;">${qrSvg}</div>`
-                  : `<div style="width:140px;height:140px;border:2px dashed #1f4e79;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#57606a;text-align:center;padding:10px;">QR Unavailable</div>`}
+                  ? `<div style="width:140px;height:140px;border:2px solid #1f4e79;padding:5px;border-radius:8px;background:#ffffff;display:inline-block;">                ${qrSvg
+                  ? `<div style="display:inline-block;line-height:0;">${qrSvg}</div>`
+                  : `<div style="width:140px;height:140px;font-size:10px;color:#57606a;text-align:center;padding:10px;">QR Unavailable</div>`}
                 <div style="font-size:8px;color:#8c959f;margin-top:4px;text-align:center;word-break:break-all;max-width:140px;">${publicUrl ? escapeHtml(publicUrl) : ''}</div>
               </td>
             </tr>
