@@ -15,7 +15,7 @@
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 
   <script>
     (function() {
@@ -3571,16 +3571,19 @@
     function buildInvoicePublicUrl(inv) {
       return getAppBaseUrl() + '?inv=' + encodeURIComponent(inv.invoiceNumber);
     }
-    async function generateQRDataURL(text, size) {
-      if (!window.QRCode) return '';
+        function generateQRSVG(text, size) {
       try {
+        if (typeof qrcode === 'undefined') return '';
         const s = size || 160;
-        return await window.QRCode.toDataURL(text, {
-          width: s,
-          margin: 1,
-          errorCorrectionLevel: 'M',
-          color: { dark: '#1f4e79', light: '#ffffff' }
-        });
+        const qr = qrcode(0, 'M');
+        qr.addData(text);
+        qr.make();
+        const count = qr.getModuleCount();
+        const cellSize = Math.max(2, Math.floor((s - 20) / count));
+        const margin = Math.max(0, Math.floor((s - cellSize * count) / 2));
+        let svg = qr.createSvgTag({ cellSize: cellSize, margin: margin, scalable: true });
+        svg = svg.replace('<svg ', `<svg width="${s}" height="${s}" `);
+        return svg;
       } catch (e) {
         console.warn('QR generation failed:', e);
         return '';
@@ -4114,7 +4117,7 @@
     /* ============================================================
        INVOICE PRINT (Modern A4 + QR)
        ============================================================ */
-    function buildInvoicePrintHTML(inv, qrDataUrl, publicUrl) {
+        function buildInvoicePrintHTML(inv, qrSvg, publicUrl) {
       const itemsRows = inv.items.map((it, i) => `
         <tr style="border-bottom:1px solid #e5e7eb;">
           <td style="padding:10px 8px;font-size:12px;color:#1f2328;">${i + 1}</td>
@@ -4240,9 +4243,9 @@
                   This is a computer-generated document — no signature required.
                 </div>
               </td>
-              <td style="text-align:right;width:160px;vertical-align:middle;padding-top:18px;">
-                ${qrDataUrl
-                  ? `<img src="${qrDataUrl}" alt="QR Code" style="width:140px;height:140px;border:2px solid #1f4e79;padding:5px;border-radius:8px;background:#ffffff;display:block;">`
+                            <td style="text-align:right;width:160px;vertical-align:middle;padding-top:18px;">
+                ${qrSvg
+                  ? `<div style="width:140px;height:140px;border:2px solid #1f4e79;padding:5px;border-radius:8px;background:#ffffff;display:inline-block;">${qrSvg}</div>`
                   : `<div style="width:140px;height:140px;border:2px dashed #1f4e79;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#57606a;text-align:center;padding:10px;">QR Unavailable</div>`}
                 <div style="font-size:8px;color:#8c959f;margin-top:4px;text-align:center;word-break:break-all;max-width:140px;">${publicUrl ? escapeHtml(publicUrl) : ''}</div>
               </td>
@@ -4258,13 +4261,13 @@
       `;
     }
 
-    async function printInvoice(id) {
+        function printInvoice(id) {
       const inv = invoices.find(i => i.id === id);
       if (!inv) { showToast('Invoice not found.', 'error'); return; }
       const publicUrl = buildInvoicePublicUrl(inv);
-      const qrDataUrl = await generateQRDataURL(publicUrl, 160);
+      const qrSvg = generateQRSVG(publicUrl, 140);
       publishInvoicePublic(inv).catch(() => {});
-      const html = buildInvoicePrintHTML(inv, qrDataUrl, publicUrl);
+      const html = buildInvoicePrintHTML(inv, qrSvg, publicUrl);
       triggerPrint(html);
     }
 
@@ -5228,8 +5231,8 @@
         }
       }, true);
 
-      setTimeout(() => {
-        showToast('Welcome to RGCE SparkDesk v1.10.1 — Public QR Ready', 'info');
+            setTimeout(() => {
+        showToast('Welcome to Roza Gift Corner & Electric', 'info');
       }, 800);
 
       window.addEventListener('online', () => {
